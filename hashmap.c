@@ -32,6 +32,11 @@ int HashMap_insert(HashMap* map, const char* key, void* value){
 			tab[i].value = value;
 			return 1;
 		}
+		else{
+			tab[i].key = strdup(key);
+			tab[i].value = value;
+			return 1;
+		}
 	}
 	return 0;
 }
