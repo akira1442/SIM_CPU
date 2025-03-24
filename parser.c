@@ -50,11 +50,15 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
 
     while ((tmp = strtok(NULL, ", ")) != NULL){
         if (strcmp(tmp, "loop:") == 0){
-
+            HashMap_insert(labels, tmp, code_count)
         }
-        else{
-
+        else if (res->mnemonic == NULL){
+            strdup(res->mnemonic, tmp);
+        }else if (res->operand1 == NULL){
+            strdup(res->operand1, tmp);
+        }else if (res->operand2 == NULL){
+            strdup(res->operand2, tmp);
         }
     }
-    
+    return res;
 }
