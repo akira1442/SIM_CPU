@@ -62,3 +62,25 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
     }
     return res;
 }
+
+ParserResult* parse(const_char* filename){
+
+    FILE* f = fopen(filename, "r");
+    const char* line[255];
+    ParserResult* new_parser = (ParserResult*) malloc(sizeof(ParserResult));
+    new_parser->data_count = 0;
+    new_parser->code_count = 0;
+    new_parser->data_instructions = (Instruction**) malloc(sizeof(Instruction*));
+    new_parser->code_instructions = (Instruction**) malloc(sizeof(Instruction*));
+    new_parser->labels = (HashMap*)malloc(sizeof(HashMap))
+
+    while (line != NULL){
+        if (strcmp(line, ".DATA") == 0){
+            new_parser->data_count++;
+            
+        }
+    }
+    
+
+    fclose(f);
+}

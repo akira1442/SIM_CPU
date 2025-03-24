@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "hashmap.h"
 
 typedef struct instruction{
     char* mnemonic; // Instruction mnemonic (ou nom de variable pour .DATA)
