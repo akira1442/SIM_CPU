@@ -2,8 +2,7 @@
 
 Instruction* parse_data_instruction(const char* line, HashMap* memory_locations){
 
-    int i = 0;
-    int j = 0;
+    int adresse = 0;
     char* buffer = strtok(line, " ");
 
     Instruction* res = (Instruction*)malloc(sizeof(Instruction));
@@ -19,24 +18,23 @@ Instruction* parse_data_instruction(const char* line, HashMap* memory_locations)
         }
         //operand2 si c'est le troisieme "mot"
         else if (!res->operand2){
-            while (buffer[i] != '\0'){
-                if (buffer[i] != ',')  
-                    j++;
-                i++;
-            }
             res->operand2=buffer;
+            while (buffer = strtok(NULL, " ")){
+                // On verifie si on a pas atteint la fin de operand2 
+                adresse++;
+            }
         }
         buffer = strtok(NULL, " ");
     }
 
-    HashMap_insert(memory_locations, res->mnemonic, res->operand2);
+    HashMap_insert(memory_locations, res->mnemonic, adresse);
     return res;
 }
 
 Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_count){
     
     Instruction* res = (Instruction*)malloc(sizeof(Instruction));
-    
+
     if (fgets(buffer, sizeof(buffer), stdin)){
         buffer[strcspn(buffer, '\n')] = '\0';
     }
