@@ -65,6 +65,8 @@ ParserResult* parse(const_char* filename){
     FILE* f = fopen(filename, "r");
     const char* line[255];
     fgets(line, 255, f);
+    // boolean 1 si on pour si .DATA 0 si .CODE
+    int DorC;
 
     ParserResult* new_parser = (ParserResult*) malloc(sizeof(ParserResult));
     new_parser->data_count = 0;
@@ -75,7 +77,6 @@ ParserResult* parse(const_char* filename){
 
     while (line != NULL){
         if (strcmp(line, ".DATA") == 0){
-
             new_parser->data_instructions=parse_data_instruction(line, new_parser->memory_locations);
             new_parser->data_count++;                
         }else if (strcmp(line, ".CODE") == 0){        
