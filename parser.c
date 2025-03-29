@@ -36,28 +36,28 @@ Instruction* parse_data_instruction(const char* line, HashMap* memory_locations)
 Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_count){
     
     Instruction* res = (Instruction*)malloc(sizeof(Instruction));
-
+    
     if (fgets(buffer, sizeof(buffer), stdin)){
         buffer[strcspn(buffer, '\n')] = '\0';
     }
 
     char* tmp = strtok(buffer, ", ");
+    char*  etiquette = NULL;
 
     while (tmp != NULL){
         // verif si ':' est dans la ligne si oui regarder le 1er mot
-        if (tmp = strtok(tmp, ":")){
-
+        if (strchr(buffer, ":") && (etiquette = strtok(tmp, ":"))){
+            HashMap_insert(labels, etiquette, code_count);
+            tmp = strtok(NULL, ", ");
         }
-        if (strcmp(tmp, "loop") == 0){
-            HashMap_insert(labels, tmp, code_count)
-        }
-        else if (res->mnemonic == NULL){
+        if (res->mnemonic == NULL){
             strdup(res->mnemonic, tmp);
         }else if (res->operand1 == NULL){
             strdup(res->operand1, tmp);
         }else if (res->operand2 == NULL){
             strdup(res->operand2, tmp);
         }
+        tmp = strtok(NULL, ", ");
     }
     return res;
 }
