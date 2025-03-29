@@ -29,25 +29,25 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     Segment* prev = NULL;
     Segment* seg_free = find_free_segment(handler, start, size, &prev);
 
-    // Si il existe un espace mémoire libre et suffisant disponible
+    // Si il existe un espace mÃ©moire libre et suffisant disponible
     if (seg_free){
-        // Création du nouveau segment
+        // CrÃ©ation du nouveau segment
         Segment* new_seg = (Segment*)malloc(sizeof(Segment));
         new_seg->size = size;
         new_seg->start = start;
         new_seg->next = NULL;
 
-        // On doit rechaîné les espaces libre entre eux, on a 4 cas différents
-        // Cas où l'adresse est plus grande que l'adresse du segment libre
+        // On doit rechaÃ®nÃ© les espaces libre entre eux, on a 4 cas diffÃ©rents
+        // Cas oÃ¹ l'adresse est plus grande que l'adresse du segment libre
         if ((start > seg_free->start) && (start+size == seg_free->next->start)){
             seg_free->size -= new_seg->size;
         }
-        // Cas où l'espace disponible est plus grand que l'espace demandé
+        // Cas oÃ¹ l'espace disponible est plus grand que l'espace demandÃ©
         else if (size < seg_free->size){
             seg_free->start += new_seg->size;
             seg_free->size -= size;
         }
-        // Cas où l'espace demandé se trouve au millieu de l'espace disponible
+        // Cas oÃ¹ l'espace demandÃ© se trouve au millieu de l'espace disponible
         else if ((start > seg_free->size) && (start+size < seg_free->next->size)){
             Segment* tmp = (Segment*)malloc(sizeof(Segment));
             tmp->start = start+size;
@@ -56,7 +56,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
             seg_free->size -= new_seg->size;
             seg_free->next = tmp;
         }
-        // Notre 4e cas c'est lors que l'espace demandé est de la même taille que l'espace disponible
+        // Notre 4e cas c'est lors que l'espace demandÃ© est de la mÃªme taille que l'espace disponible
         // Insertion du segment dans la table de hachage
         if (HashMap_insert(handler->allocated, name, new_seg) == 0){
             fprintf(stderr, "ERREUR:insertion du nouveau segment dans handler");
@@ -64,7 +64,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
         }
         return 1;
     }
-    // Le cas échéant
+    // Le cas Ã©chÃ©ant
     return 0;
 }
 
@@ -74,7 +74,7 @@ int remove_segment(MemoryHandler *handler, const char *name){
     if (seg){
         Segment* prev = NULL;
         Segment* current = handler->free_list;
-        while (current != NULL){    //On se déplace dans la free_list jusqu'a arriver a l'emplacement mémoire
+        while (current != NULL){    //On se deplace dans la free_list jusqu'a arriver a l'emplacement mÃ©moire
             if ((current->start+current->size) == seg->start){
                 break;
             }

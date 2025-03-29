@@ -4,34 +4,29 @@ Instruction* parse_data_instruction(const char* line, HashMap* memory_locations)
 
     int i = 0;
     int j = 0;
-    char* buffer[255]="";
+    char* buffer = strtok(line, " ");
+
     Instruction* res = (Instruction*)malloc(sizeof(Instruction));
 
-    while(line[i] != '\0'){
-        //Dès qu'on recontre un espace on envoie la valeur de buffer dans:
-        if (line[i]==" "){ 
-            //mnemonic si c'est le premier "mot"
-            if (!res->mnemonic){  
-                res->mnemonic=buffer;
-                buffer="";
-                j = 0;
-            }
-            //operand1 si c'est le deuxieme "mot"
-            else if (!res->operand1){ 
-                res->operand1=buffer;
-                buffer="";
-                j = 0;
-            }
-            
+    while(buffer){
+        //mnemonic si c'est le premier "mot"
+        if (!res->mnemonic){  
+            res->mnemonic=buffer;
         }
-        buffer[j]+=line[i];
-        i++;
-        j++;
-    }
-    // On doit vérifier si le buffer est vide
-    // Si il ne l'est pas on doit l'ajouter à operand2
-    if ((!res->operand2) && (strlen(buffer)!=0)){ //operand2 si c'est de troisième mot 
-        res->operand2=buffer;
+        //operand1 si c'est le deuxieme "mot"
+        else if (!res->operand1){ 
+            res->operand1=buffer;
+        }
+        //operand2 si c'est le troisieme "mot"
+        else if (!res->operand2){
+            while (buffer[i] != '\0'){
+                if (buffer[i] != ',')  
+                    j++;
+                i++;
+            }
+            res->operand2=buffer;
+        }
+        buffer = strtok(NULL, " ");
     }
 
     HashMap_insert(memory_locations, res->mnemonic, res->operand2);
@@ -48,8 +43,12 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
 
     char* tmp = strtok(buffer, ", ");
 
-    while ((tmp = strtok(NULL, ", ")) != NULL){
-        if (strcmp(tmp, "loop:") == 0){
+    while (tmp != NULL){
+        // verif si ':' est dans la ligne si oui regarder le 1er mot
+        if (tmp = strtok(tmp, ":")){
+
+        }
+        if (strcmp(tmp, "loop") == 0){
             HashMap_insert(labels, tmp, code_count)
         }
         else if (res->mnemonic == NULL){
@@ -67,20 +66,55 @@ ParserResult* parse(const_char* filename){
 
     FILE* f = fopen(filename, "r");
     const char* line[255];
+    fgets(line, 255, f);
+
     ParserResult* new_parser = (ParserResult*) malloc(sizeof(ParserResult));
     new_parser->data_count = 0;
     new_parser->code_count = 0;
     new_parser->data_instructions = (Instruction**) malloc(sizeof(Instruction*));
     new_parser->code_instructions = (Instruction**) malloc(sizeof(Instruction*));
-    new_parser->labels = (HashMap*)malloc(sizeof(HashMap))
+    new_parser->labels = (HashMap*)malloc(sizeof(HashMap));
 
     while (line != NULL){
         if (strcmp(line, ".DATA") == 0){
-            new_parser->data_count++;
-            
+
+            new_parser->data_instructions=parse_data_instruction(line, new_parser->memory_locations);
+            new_parser->data_count++;                
+        }else if (strcmp(line, ".CODE") == 0){        
+            while(strcmp(line, ".DATA") == 1){
+                new_parser->code_instructions=parse_code_instruction(line, new_parser->labels,new_parser->code_count);
+                new_parser->code_count++;
+            }
         }
+        fgets(line, 255, f);
     }
     
-
     fclose(f);
+    return new_parser;
+}
+
+void free_instruction(Instruction* inst){
+    if(inst) return;
+
+    free((inst)->mnemonic);
+    free((inst)->operand1);
+    free((inst)->operand2);
+    free(inst);
+}
+
+void free_parser_result(ParserResult* result){
+
+    if (!result){
+        return;
+    }
+
+    // On libere .DATA
+    if (result->data_instructions){
+        int i = 0;
+        while(i < result->data_count){
+            if (result->data_instructions[i]){
+
+            }
+        }
+    }
 }
