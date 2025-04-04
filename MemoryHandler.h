@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "HashMap.h"
+#include "hashmap.h"
 #ifndef MEMORYHANDLER_H
 
 typedef struct segment{
