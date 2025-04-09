@@ -7,13 +7,15 @@ MemoryHandler* memory_init(int size){
     handler->free_list->start = 0;
     handler->free_list->size = size;
     handler->free_list->next = NULL;
-    handler->allocated = create_hash_map();
+    handler->allocated = hashmap_create();
     handler->total_size = size;
     return handler;
 }
 
-Segment find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev){
-    Segment *current = handler->free_list;
+Segment* find_free_segment(MemoryHandler* handler, int start, int size, Segment** prev){
+    
+    Segment* current = handler->free_list;
+    
     while(current != NULL){
         if(current->start <= start && current->size >= size){
             return current;
@@ -89,7 +91,7 @@ int remove_segment(MemoryHandler *handler, const char *name){
             free(tmp);       
         }
         // cas 2: start++ ou start--
-        else if{
+        else if(current->start == (seg->start+seg->size)){
             prev->next = seg;
         }
         //cas 3 chainage avant apres
