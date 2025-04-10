@@ -49,13 +49,14 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
 
     char* buffer = strdup(line);
 
-    char* tmp = strtok(buffer, ", ");
-    char*  etiquette = strtok(tmp, ":");
+    buffer = strtok(buffer, ": ");
+    char*  etiquette = strtok(line, ":");
 
     // On verifie si ':' est dans la ligne si oui regarder le 1er mot
-    if (strchr(buffer, ':') && etiquette){
-        HashMap_insert(labels, etiquette, &code_count);
-        tmp = strtok(NULL, ", ");
+    if (strchr(buffer, ':') != NULL) {
+        buffer[strcspn(line, ":")] = 0;
+        HashMap_insert(labels, buffer, &code_count);
+        buffer = strtok(NULL, " ");
     }
 
     while(buffer != NULL){
@@ -101,19 +102,21 @@ ParserResult* parse(const char* filename){
         // On verifie si on est dans la section .DATA ou .CODE
         if (strcmp(line, ".DATA") == 0){
             DorC = 1;
-            fgets(line, 255, f);
+            printf("caca\n");
         }else if (strcmp(line, ".CODE") == 0){
             DorC = 0;
-            fgets(line, 255, f);
+            printf("pipi\n");
         }
-
+        
         // On ajoute les instructions dans le tableau d'instructions correspondant
-        if (DorC == 1){
-            new_parser->data_instructions[new_parser->data_count] = (parse_data_instruction(line, new_parser->memory_locations));
-            new_parser->data_count++;              
-        }else if (DorC == 0){        
-            new_parser->code_instructions[new_parser->code_count] = (parse_code_instruction(line, new_parser->labels,new_parser->code_count));
-            new_parser->code_count++;
+        else if ((strcmp(line, ".DATA") != 0) && (strcmp(line, ".CODE") != 0)){    
+            if (DorC == 1){
+                new_parser->data_instructions[new_parser->data_count] = (parse_data_instruction(line, new_parser->memory_locations));
+                new_parser->data_count++;              
+            }else if (DorC == 0){        
+                new_parser->code_instructions[new_parser->code_count] = (parse_code_instruction(line, new_parser->labels, new_parser->code_count));
+                new_parser->code_count++;
+            }
         }
     }
     
@@ -176,7 +179,7 @@ void free_parser_result(ParserResult* result) {
 void afficher_instructions(Instruction** instructions, int count) {
     for (int i = 0; i < count; ++i) {
         if (instructions[i] != NULL) {
-            printf("Instruction %d: Mnemonic: %s, Operand1: %s, Operand2: %s\n", 
+            printf("Instruction %d: Mnemonic: %s Operand1: %s Operand2: %s\n", 
                     i, instructions[i]->mnemonic, instructions[i]->operand1, instructions[i]->operand2);
         }
     }
