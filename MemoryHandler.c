@@ -70,33 +70,57 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
     return 0;
 }
 
-int remove_segment(MemoryHandler *handler, const char *name){
-    Segment* seg = (Segment*)HashMap_get(handler->allocated, name);
-
-    if (seg){
-        Segment* prev = NULL;
-        Segment* current = handler->free_list;
-        while (current != NULL){    //On se deplace dans la free_list jusqu'a arriver a l'emplacement mÃ©moire
-            if ((current->start+current->size) == seg->start){
-                break;
-            }
-            prev = current;
-            current = current->next;
-        }
-        //cas 1: full libre
-        if (current->next->start == (current->start+current->size+seg->size)){
-            Segment* tmp = current->next;
-            current->size += seg->size+current->next->size;
-            current->next = tmp->next;
-            free(tmp);       
-        }
-        // cas 2: start++ ou start--
-        else if(current->start == (seg->start+seg->size)){
-            prev->next = seg;
-        }
-        //cas 3 chainage avant apres
-        seg->next = current;
-        return 1;
+int remove_segment(MemoryHandler *handler, const char *name) {
+    // Retire l'élément de la table de hachage et vérifie si l'opération a réussi
+    int result = hashmap_remove(handler->allocated, name);
+    if (result == 0) { // Si la suppression échoue
+        printf("Segment non trouvé\n");
+        return 0;
     }
-    return 0;
+
+    // Parcourt la table de hachage pour retrouver le segment
+    unsigned long index = simple_hash(name) % handler->allocated->size; // Calcule l'index avec hachage
+    HashEntry entry = handler->allocated->table[index]; // Accède à l'entrée de la table
+
+    // Vérifie si l'entrée est valide
+    if (entry.key == NULL || strcmp(entry.key, name) != 0) {
+        printf("Segment avec le nom '%s' non trouvé dans la table allouée\n", name);
+        return 0;
+    }
+
+    // Récupère le segment associé à l'entrée de la table
+    Segment *segment = (Segment *)entry.value; // Cast de la valeur en Segment
+
+    // Ajoute le segment dans la liste des segments libres
+    Segment *prev = NULL;
+    Segment *current = handler->free_list;
+
+    // Trouve la position où insérer le segment dans free_list
+    while (current && current->start < segment->start) {
+        prev = current;
+        current = current->next;
+    }
+
+    // Fusionne avec le segment libre précédent si adjacent
+    if (prev && (prev->start + prev->size == segment->start)) {
+        prev->size += segment->size;
+        free(segment); // Libère le segment fusionné
+        segment = prev;
+    } else {
+        segment->next = current;
+        if (prev) {
+            prev->next = segment;
+        } else {
+            handler->free_list = segment;
+        }
+    }
+
+    // Fusionne avec le segment libre suivant si adjacent
+    if (current && (segment->start + segment->size == current->start)) {
+        segment->size += current->size;
+        segment->next = current->next;
+        free(current);
+    }
+
+    return 1;
 }
