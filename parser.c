@@ -8,51 +8,7 @@ char* trim(char* str) {
     return str;
 }
 
-int search_and_replace(char* str, HashMap values) {
-    if (!str || !values) return 0;
 
-    int replaced = 0;
-    char* input = str;
-    // Iterate through every key in the hashmap
-    for (int i = 0; i < values->size; i++) {
-        if (values->table[i].key && values->table[i].value) {
-            char* key = values->table[i].key;
-            int value = *((int*)values->table[i].value);
-
-            // Find potential substring match
-            char* match = strstr(input, key);
-            if (!match) continue;
-
-            // Construct replacement buffer
-            char replacement[255];
-            snprintf(replacement, sizeof(replacement), "%d", value);
-
-            // Calculate lengths
-            int key_len = strlen(key);
-            int repl_len = strlen(replacement);
-
-            // Allocate new string
-            char* output = malloc(strlen(input) - key_len + repl_len + 1);
-            strncpy(output, input, match - input);
-            output[match - input] = '\0';
-            strcat(output, replacement);
-            strcat(output, match + key_len);
-
-            // Free old input and update original string
-            free(input);
-            input = output;
-            replaced = 1;
-        }
-    }
-
-    // Trim the final string
-    if (replaced) {
-        char* trimmed = trim(input);
-        memmove(input, trimmed, strlen(trimmed) + 1);
-    }
-
-    return replaced;
-}
 
 Instruction* parse_data_instruction(const char* line, HashMap* memory_locations){
 

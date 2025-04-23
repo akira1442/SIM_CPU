@@ -9,6 +9,12 @@ CPU* cpu_init(int memory_size) {
     *val3 = 0;
     int* val4 = (int*)malloc(sizeof(int));
     *val4 = 0;
+    int* val5 = (int*)malloc(sizeof(int));
+    *val5 = 0;
+    int* val6 = (int*)malloc(sizeof(int));
+    *val6 = 0;
+    int* val7 = (int*)malloc(sizeof(int));
+    *val7 = 0;
 
     // Initialisation dynamique du CPU
     CPU* new = (CPU*)malloc(sizeof(CPU));
@@ -21,6 +27,9 @@ CPU* cpu_init(int memory_size) {
     HashMap_insert(new->context, "BX", val2);
     HashMap_insert(new->context, "CX", val3);
     HashMap_insert(new->context, "DX", val4);
+    HashMap_insert(new->context, "IP", val5);
+    HashMap_insert(new->context, "ZF", val6);
+    HashMap_insert(new->context, "SF", val7);
 
     return new;
 }
@@ -158,3 +167,50 @@ int matches(const char* pattern, const char* str){
 }
 
 void* immediate_addressing(CPU* cpu, const char* operand){}
+
+
+int search_and_replace(char* str, HashMap values) {
+    if (!str || !values) return 0;
+
+    int replaced = 0;
+    char* input = str;
+    // Iterate through every key in the hashmap
+    for (int i = 0; i < values->size; i++) {
+        if (values->table[i].key && values->table[i].value) {
+            char* key = values->table[i].key;
+            int value = *((int*)values->table[i].value);
+
+            // Find potential substring match
+            char* match = strstr(input, key);
+            if (!match) continue;
+
+            // Construct replacement buffer
+            char replacement[255];
+            snprintf(replacement, sizeof(replacement), "%d", value);
+
+            // Calculate lengths
+            int key_len = strlen(key);
+            int repl_len = strlen(replacement);
+
+            // Allocate new string
+            char* output = malloc(strlen(input) - key_len + repl_len + 1);
+            strncpy(output, input, match - input);
+            output[match - input] = '\0';
+            strcat(output, replacement);
+            strcat(output, match + key_len);
+
+            // Free old input and update original string
+            free(input);
+            input = output;
+            replaced = 1;
+        }
+    }
+
+    // Trim the final string
+    if (replaced) {
+        char* trimmed = trim(input);
+        memmove(input, trimmed, strlen(trimmed) + 1);
+    }
+
+    return replaced;
+}
