@@ -16,7 +16,7 @@ Instruction* parse_data_instruction(const char* line, HashMap* memory_locations)
 
         if (res->mnemonic == NULL) {
             res->mnemonic = strdup(buffer);
-            printf("buffer : %s ", buffer);
+            printf("buffer : %s\n", buffer);
         } else if (res->operand1 == NULL) {
             res->operand1 = strdup(buffer);
         } else if (res->operand2 == NULL) {
@@ -48,12 +48,13 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
     char* buffer = strdup(line);
 
     buffer = strtok(buffer, ": ");
-    char*  etiquette = strtok(strdup(line), ":");
+    char* etiquette;
 
     // On verifie si ':' est dans la ligne si oui regarder le 1er mot
-    if (strchr(buffer, ':') != NULL) {
-        buffer[strcspn(line, ":")] = 0;
-        HashMap_insert(labels, buffer, &code_count);
+    if (strchr(line, ':') != NULL){ 
+        etiquette = strtok(strdup(line), ":");
+        //buffer[strcspn(line, ":")] = 0;
+        HashMap_insert(labels, etiquette, &code_count);
         buffer = strtok(NULL, " ");
     }
 
@@ -62,7 +63,6 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
 
         if (res->mnemonic == NULL) {
             res->mnemonic = strdup(buffer);
-            printf("buffer : %s\n", buffer);
         } else if (res->operand1 == NULL) {
             res->operand1 = strdup(buffer);
         } else if (res->operand2 == NULL) {
@@ -95,14 +95,14 @@ ParserResult* parse(const char* filename){
         line[strcspn(line, "\n")] = 0;
 
         // On verifie si on est dans la section .DATA ou .CODE
-        if (strcmp(line, ".DATA") == 0){
-            DorC = 1;
-        }else if (strcmp(line, ".CODE") == 0){
+        if (strcmp(line, ".CODE") == 0){
             DorC = 0;
+        }else if (strcmp(line, ".DATA") == 0){
+            DorC = 1;
+            printf("caca\n");
         }
-        
         // On ajoute les instructions dans le tableau d'instructions correspondant
-        else if ((strcmp(line, ".DATA") != 0) && (strcmp(line, ".CODE") != 0)){    
+        else{    
             if (DorC == 1){
                 printf("line : %s\n", line);
                 new_parser->data_instructions[new_parser->data_count] = (parse_data_instruction(line, new_parser->memory_locations));

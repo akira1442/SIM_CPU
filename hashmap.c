@@ -1,6 +1,5 @@
 #include "hashmap.h" 
 
-
 unsigned long simple_hash(const char* str){
 	
 	unsigned long res = 0;
@@ -24,9 +23,10 @@ HashMap* hashmap_create(){
 int HashMap_insert(HashMap* map, const char* key, void* value){
 	
 	for (int i = 0; i < TABLE_SIZE; i++){
-		if (map->table[i].value == NULL){
-			map->table[i].key = strdup(key);
-			map->table[i].value = value;
+		
+		if (map->table[simple_hash(key)+i%TABLE_SIZE].value == NULL){
+			map->table[simple_hash(key)+i%TABLE_SIZE].key = strdup(key);
+			map->table[simple_hash(key)+i%TABLE_SIZE].value = value;
 			return 1;
 		}
 	}
@@ -65,8 +65,9 @@ void HashMap_destroy(HashMap *map){
 void afficher_hashmap(HashMap* map){
 	
 	for (int i = 0; i < map->size; i++){
-		if (map->table[i].key != NULL){
-			printf("Key: %s, Value: %p\n", map->table[i].key, map->table[i].value);
+		if (map->table[i].value != NULL){
+			int* value = (int*)map->table[i].value;
+			printf("Key: %s, Value: %p\n", map->table[i].key, value);
 		}
 	}
 }
