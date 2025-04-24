@@ -166,7 +166,25 @@ int matches(const char* pattern, const char* str){
     return result == 0;
 }
 
-void* immediate_addressing(CPU* cpu, const char* operand){}
+void* immediate_addressing(CPU* cpu, const char* operand){
+    if (!cpu || !operand) {
+        fprintf(stderr, "ERREUR: CPU ou operande NULL\n");
+        return NULL;
+    }
+
+    // Vérifie si l'opérande est un nombre
+    if (matches("^[0-9]+$", operand)) {
+        int* value = (int*)malloc(sizeof(int));
+        *value = atoi(operand);
+        if(hashmap_get(cpu->constant_pool, value) == 1){
+            HashMap_insert(cpu->constant_pool, operand, value);
+            return value;
+        }
+    }
+
+    fprintf(stderr, "ERREUR: operande %s non trouve\n", operand);
+    return NULL;
+}
 
 
 int search_and_replace(char* str, HashMap values) {
