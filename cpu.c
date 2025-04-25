@@ -186,6 +186,22 @@ void* immediate_addressing(CPU* cpu, const char* operand){
     return NULL;
 }
 
+void* register_addressing(CPU* cpu, const char* operand){
+
+    if (!cpu || !operand){
+        fprintf(stderr, "ERREUR: CPU ou operande NULL\n");
+        return NULL;
+    }
+
+    if (matches("[A-D][X]", operand)){
+        char* value  = strdup((char*)HashMap_get(cpu->context, operand)); //(char*) malloc(sizeof(char) * 2);
+        if (value == NULL) {
+            fprintf(stderr, "ERREUR: allocation de memoire echouee\n");
+            return NULL;
+        }        
+    }
+    return value;
+}
 
 int search_and_replace(char* str, HashMap values) {
     if (!str || !values) return 0;
