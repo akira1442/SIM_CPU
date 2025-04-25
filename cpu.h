@@ -18,3 +18,4 @@ void* immediate_addressing(CPU* cpu, const char* operand);
 int search_and_replace(char* str, HashMap values);
 int matches(const char* pattern, const char* str);
 void* register_addressing(CPU* cpu, const char* operand);
+void* memory_direct_addressing(CPU* cpu, const char* operand);

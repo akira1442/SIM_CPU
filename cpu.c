@@ -193,7 +193,7 @@ void* register_addressing(CPU* cpu, const char* operand){
         return NULL;
     }
 
-    if (matches("[A-D][X]", operand)){
+    if (matches("^[A-D][X]$", operand)){
         char* value  = strdup((char*)HashMap_get(cpu->context, operand)); //(char*) malloc(sizeof(char) * 2);
         if (value == NULL) {
             fprintf(stderr, "ERREUR: allocation de memoire echouee\n");
@@ -201,6 +201,27 @@ void* register_addressing(CPU* cpu, const char* operand){
         }        
     }
     return value;
+}
+
+void* memory_direct_addressing(CPU* cpu, const char* operand){
+
+    if (!cpu || !operand){
+        fprintf(stderr, "ERREUR: CPU ou operande NULL\n");
+        return NULL;
+    }
+
+    if (matches("^\[[0-9]+\]$", operand)){
+        int* value = atoi(operand + 1); //atoi(strdup(operand));
+        if (value == NULL) {
+            fprintf(stderr, "ERREUR: allocation de memoire echouee\n");
+            return NULL;
+        }
+        Segment* segment = (Segment*)HashMap_get(cpu->memory_handler->allocated, operand);
+        if ((!segment) && ((segment->start+value > segment->start) && (segment->start+value < segment->size-1))){
+            return cpu->memory_handler->memory[segment->start + value];
+        }
+    }
+    return NULL;
 }
 
 int search_and_replace(char* str, HashMap values) {
