@@ -224,6 +224,29 @@ void* memory_direct_addressing(CPU* cpu, const char* operand){
     return NULL;
 }
 
+void* register_indirect_addressing(CPU* cpu, conts char* operand){
+
+    if (!cpu || ! operand){
+        fprintf(stderr, "ERREUR: CPU ou operande NULL\n");
+        return NULL;
+    }
+
+    if (matches("[AX]|[BX]|[CX]|[DX]|[IP]|[ZF]|[SF]", operand)){
+        char* value = strdup((char*)HashMap_get(cpu->context, operand));
+        if (value == NULL) {
+            fprintf(stderr, "ERREUR: allocation de memoire echouee\n");
+            return NULL;
+        }
+        Segment* segment = (Segment*)HashMap_get(cpu->memory_handler->allocated, value);
+    }
+    if (segment == NULL) {
+        fprintf(stderr, "ERREUR: segment %s non trouve\n", value);
+        return NULL;
+    }
+    return segment;
+
+}
+
 int search_and_replace(char* str, HashMap values) {
     if (!str || !values) return 0;
 
