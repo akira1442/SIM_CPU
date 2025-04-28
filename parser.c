@@ -8,8 +8,6 @@ char* trim(char* str) {
     return str;
 }
 
-
-
 Instruction* parse_data_instruction(const char* line, HashMap* memory_locations){
 
     int adresse = 0;
@@ -26,7 +24,7 @@ Instruction* parse_data_instruction(const char* line, HashMap* memory_locations)
 
         if (res->mnemonic == NULL) {
             res->mnemonic = strdup(buffer);
-            printf("buffer : %s\n", buffer);
+            //printf("buffer : %s\n", buffer);
         } else if (res->operand1 == NULL) {
             res->operand1 = strdup(buffer);
         } else if (res->operand2 == NULL) {
@@ -45,6 +43,7 @@ Instruction* parse_data_instruction(const char* line, HashMap* memory_locations)
 
     // On ajoute l'adresse mémoire dans la table de hachage
     HashMap_insert(memory_locations, res->mnemonic, &adresse);
+    free(buffer);
     return res;
 }
 
@@ -80,7 +79,7 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
         }
         buffer = strtok(NULL, ", ");
     }
-
+    free(etiquette);
     return res;
 }
 
@@ -95,8 +94,8 @@ ParserResult* parse(const char* filename){
     ParserResult* new_parser = (ParserResult*) malloc(sizeof(ParserResult));
     new_parser->data_count = 0;
     new_parser->code_count = 0;
-    new_parser->data_instructions = (Instruction**) malloc(sizeof(Instruction*));
-    new_parser->code_instructions = (Instruction**) malloc(sizeof(Instruction*));
+    new_parser->data_instructions = (Instruction**) malloc(sizeof(Instruction*)*TABLE_SIZE);
+    new_parser->code_instructions = (Instruction**) malloc(sizeof(Instruction*)*TABLE_SIZE);
     new_parser->memory_locations = hashmap_create();
     new_parser->labels = hashmap_create();
 
@@ -133,11 +132,14 @@ void free_instruction(Instruction** Tabinst, int count) {
     // Le programme libère la mémoire allouée pour les champs de l'instruction
 
     for (int i = 0; i < count; i++){
-        free(Tabinst[i]->mnemonic);
-        free(Tabinst[i]->operand1);
-        free(Tabinst[i]->operand2);
-        free(Tabinst[i]);
+        printf("numero instruction:%d\n",i);
+        if (Tabinst[i] != NULL){
+            free(Tabinst[i]->mnemonic);
+            free(Tabinst[i]->operand1);
+            free(Tabinst[i]->operand2);
+        }
     }
+    free(Tabinst);
 }
 
 void free_parser_result(ParserResult* result) {
@@ -145,38 +147,29 @@ void free_parser_result(ParserResult* result) {
     // Le programme vérifie si le résultat existe
     if (!result) return;
 
+    // Le programme libère la mémoire des structures de données auxiliaires
+    if (result->labels) {
+        HashMap_destroy(result->labels);
+        result->labels = NULL;
+    }
+
+    if (result->memory_locations) {
+        HashMap_destroy(result->memory_locations);
+        result->memory_locations = NULL;
+    }
+
     // Le programme libère la mémoire allouée pour les instructions de la section DATA
     if (result->data_instructions) {
         free_instruction(result->data_instructions, result->data_count);
-        
-        // Le programme libère le tableau des instructions DATA et met le pointeur à NULL
-        free(result->data_instructions);
         result->data_instructions = NULL;
     }
 
     // Le programme libère la mémoire allouée pour les instructions de la section CODE
     if (result->code_instructions) {
-    
         free_instruction(result->code_instructions, result->code_count);
-        // Le programme libère le tableau des instructions CODE et met le pointeur à NULL
-        free(result->code_instructions);
-        //result->code_instructions = NULL;
+        result->code_instructions = NULL;
     }
 
-    // Le programme libère la mémoire des structures de données auxiliaires
-    if (result->labels) {
-        // Le programme détruit la table de hachage des étiquettes
-        HashMap_destroy(result->labels);
-        //result->labels = NULL;
-    }
-
-    if (result->memory_locations) {
-        // Le programme détruit la table de hachage des emplacements mémoire
-        HashMap_destroy(result->memory_locations);
-        result->memory_locations = NULL;
-    }
-
-    // Le programme libère la structure principale
     free(result);
 }
 

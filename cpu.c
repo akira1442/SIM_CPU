@@ -224,12 +224,14 @@ void* memory_direct_addressing(CPU* cpu, const char* operand){
     return NULL;
 }
 
-void* register_indirect_addressing(CPU* cpu, conts char* operand){
+void* register_indirect_addressing(CPU* cpu, const char* operand){
 
     if (!cpu || ! operand){
         fprintf(stderr, "ERREUR: CPU ou operande NULL\n");
         return NULL;
     }
+
+    Segment* segment = NULL;
 
     if (matches("[AX]|[BX]|[CX]|[DX]|[IP]|[ZF]|[SF]", operand)){
         char* value = strdup((char*)HashMap_get(cpu->context, operand));
@@ -237,15 +239,58 @@ void* register_indirect_addressing(CPU* cpu, conts char* operand){
             fprintf(stderr, "ERREUR: allocation de memoire echouee\n");
             return NULL;
         }
-        Segment* segment = (Segment*)HashMap_get(cpu->memory_handler->allocated, value);
+        //???
+        segment = (Segment*)HashMap_get(cpu->memory_handler->memory, value);
     }
     if (segment == NULL) {
         fprintf(stderr, "ERREUR: segment %s non trouve\n", value);
         return NULL;
     }
     return segment;
-
 }
+
+void handle_MOV(CPU* cpu, void* src, void* dest){
+
+    
+}
+
+#include "cpu.h"
+
+CPU* setup_cpu_environment() {
+    // Initialiser le CPU
+    CPU* cpu = cpu_init(1024);
+    if (!cpu) {
+        printf("Erreur : CPU initialization failed!\n");
+        return NULL;
+    }
+
+    // Initialiser les registres avec des valeurs spécifiques
+    cpu->bank->gp->eax = 1;
+    cpu->bank->gp->ebx = 2;
+    cpu->bank->gp->ecx = 3;
+    cpu->bank->gp->edx = 4;
+    cpu->bank->gp->esi = 5;
+    cpu->bank->gp->edi = 6;
+    cpu->bank->gp->esp = 7;
+    cpu->bank->gp->ebp = 8;
+
+    // Initialiser le segment de données
+    if (cpu->bank->handler->load_segment(cpu->bank, "DS") < 0) {
+        printf("Erreur : Failed to load data segment!\n");
+        cpu_free(cpu);
+        return NULL;
+    }
+
+    // Initialiser le segment de données avec des valeurs de test
+    cpu->bank->memory[0] = 10;
+    cpu->bank->memory[1] = 20;
+    cpu->bank->memory[2] = 30;
+    cpu->bank->memory[3] = 40;
+
+    printf("CPU environment initialized.\n");
+    return cpu;
+}
+
 
 int search_and_replace(char* str, HashMap values) {
     if (!str || !values) return 0;
