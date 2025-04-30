@@ -1,0 +1,44 @@
+/---  Rapport du projet de SDD : Emile RIVET et Nawad KARIHILA  ---\
+
+    Le projet consiste à développer en C un simulateur de CPU simplifié.
+On passera par l'élaboration des différentes structures de données, ainsi que par la gestion de la mémoire.
+On se concentera aussi sur l'interprétation et l'éxécution d'un pseudo-assembleur, qui gèrera des segments de données, codes, piles, etc....
+Le projet aborde aussi des modes d'adressage fondamentaux.
+
+
+
+/---  DESCRIPTION DES STRUCTURES MANIPULÉES  ---\
+
+-> La première structure utilisée est dans le ficher "hashmap.h" :
+    Elle définit une implémentation de table de hachage générique. 
+    Elle inclut les bibliothèques "stdio.h","stdlib.h" et "string.h" pour les opérations de base, définit une taille de table fixe et une valeur tombstone pour la gestion des entrées supprimées. 
+    Deux structures sont déclarées : HashEntry pour stocker les paires clé-valeur et HashMap pour représenter la table de hachage elle-même.
+    On fournit également les prototypes des fonctions demandées pour créer, manipuler et libérer la table de hachage.
+
+->Les deuxièmes structures utilisées sont dans le fichier "MemoryHandler.h" :
+    Elles définissent les structures et fonctions pour un gestionnaire de mémoire en C.
+    La structure Segment représente un bloc mémoire avec une position de début, une taille et un pointeur vers le segment suivant.
+    La structure MemoryHandler encapsule la gestion de la mémoire : un tableau de pointeurs pour la mémoire allouée, une liste chainée des segments libres, une table de hachage pour les segments nommés et la taille totale de la mémoire.
+    On fournit aussi les prototypes des fonctions permettentant d'initialiser le gestionnaire, de trouver des segments libres, de créer et supprimer des segments, ainsi que de libérer des segments.
+    Ce module gère efficacement l'allocation et la libération dynamique de la mémoire pour une utilisation optimale.
+
+->Les troisièmes structures utilisée sont dans le "fihier parser.h" :
+    Elles définissent les structures et fonctions nécessaires pour manipuler un parser avec un fichier pseudo-assembleur. 
+    La structure Instruction représente une instruction avec son mnémonique et ses opérandes. 
+    La structure ParserResult encapsule les résultats du parsing, incluant les instructions .DATA et .CODE, ainsi que les tables d'étiquettes et d'emplacements mémoire. 
+    Les fonctions déclarées prennent en charge l’analyse des lignes des sections .DATA et .CODE, la libération des ressources allouées et l’affichage des résultats du parsing.
+    Ce module est essentiel pour transformer le code pseudo-assembleur en une structure interne exploitable par le simulateur CPU.
+
+->La dernière structure utilisée est dans le fichier "cpu.h" :
+    Ce fichier "cpu.h" définit les structures et fonctions centrales pour un simulateur CPU en C. 
+    Il inclut les en-têtes "parser.h" et "MemoryHandler.h" pour l'analyse du code assembleur et la gestion de la mémoire. 
+    La structure CPU encapsule le gestionnaire de mémoire, les registres et une table de hachage pour les valeurs immédiates. 
+    Les fonctions déclarées assurent l’initialisation et la destruction d’un CPU, le stockage et le chargement de données en mémoire, l’allocation de variables et de segments de code, la gestion des différents modes d’adressage, 
+    l’exécution des instructions, ainsi que l’affichage de l’état du CPU.
+    On peut dire que ce fichier sert d'interface pour interagir avec le simulateur CPU et ses composants internes.
+
+
+/---  DESCRIPTION DES FONCTIONS  ---\
+    La grande majorité des fonctions du projet ayant déjà été commentées, on évitera de tout redécrire ici.
+
+
