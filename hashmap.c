@@ -22,11 +22,13 @@ HashMap* hashmap_create(){
 
 int HashMap_insert(HashMap* map, const char* key, void* value){
 	
+	if (!map) return 0;
+
 	for (int i = 0; i < TABLE_SIZE; i++){
 		
-		if (map->table[simple_hash(key)+i%TABLE_SIZE].value == NULL){
-			map->table[simple_hash(key)+i%TABLE_SIZE].key = strdup(key);
-			map->table[simple_hash(key)+i%TABLE_SIZE].value = value;
+		if (map->table[simple_hash(key)+i].value == NULL){
+			map->table[simple_hash(key)+i].key = strdup(key);
+			map->table[simple_hash(key)+i].value = value;
 			return 1;
 		}
 	}
@@ -35,9 +37,11 @@ int HashMap_insert(HashMap* map, const char* key, void* value){
 
 void* HashMap_get(HashMap* map, const char* key){
 	
-	for (int i =0; i < TABLE_SIZE; i++){
-		if (strcmp(map->table[i].key, key)){
-			return map->table[i].value ;
+	if (!map) return NULL;
+
+	for (int i =0; i < map->size; i++){
+		if (strcmp(map->table[simple_hash(key)+i].key, key)){
+			return map->table[simple_hash(key)+i].value ;
 		}
 	}
 	return NULL ;
@@ -45,10 +49,13 @@ void* HashMap_get(HashMap* map, const char* key){
 
 int HashMap_remove(HashMap* map, const char* key){
 	
+	if (!map) return 0;
+
 	for (int i = 0; i < map->size; i++){
-		if (strcmp(map->table[i].key,key)){
+		if ((map->table[simple_hash(key)+i].key != NULL) && (strcmp(map->table[simple_hash(key)+i].key, key) == 0)){
 			map->table[i].value = TOMBSTONE;
 			free(map->table[i].key);
+			map->table[i].key = NULL;
 			return 1;
 		}
 	}
@@ -56,10 +63,13 @@ int HashMap_remove(HashMap* map, const char* key){
 }
 
 void HashMap_destroy(HashMap *map){
-	for (int i = 0; i < map->size; i++){
-		//if (map->table[i].value != NULL){
-		free(map->table[i].key);
-		//}
+
+	if (map == NULL) return;
+
+	for (int i = 0; i < TABLE_SIZE; i++){
+		if (map->table[i].key != NULL){
+			free(map->table[i].key);
+		}
 	}
 	free(map);
 }
@@ -68,7 +78,7 @@ void afficher_hashmap(HashMap* map){
 	
 	for (int i = 0; i < map->size; i++){
 		if (map->table[i].value != NULL){
-			int* value = (int*)map->table[i].value;
+			void* value = (void*)map->table[i].value;
 			printf("Key: %s, Value: %p\n", map->table[i].key, value);
 		}
 	}

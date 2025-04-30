@@ -22,6 +22,9 @@ hashmaptest: hashmap.c hashmap.h
 MemoryHandlertest: MemoryHandler.c MemoryHandler.h
 	$(CC) $(CFLAGS) -o $@ MemoryHandler.c
 
+cpu_main: cpu.c parser.c hashmap.c MemoryHandler.c
+	$(CC) $(CFLAGS) -o $@ cpu.c parser.c hashmap.c MemoryHandler.c
+
 # Nettoyage des fichiers objets et des exécutables
 clean:
 	rm -f $(EXEC) $(TESTS)

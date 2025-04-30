@@ -1,3 +1,5 @@
+#ifndef PARSER_H 
+#define PARSER_H 
 #include <stdio.h>
 #include <stdlib.h>
 #include "hashmap.h"
@@ -24,3 +26,5 @@ void free_instruction(Instruction** Tabinst, int count);
 void free_parser_result(ParserResult* result);
 void afficher_parser_result(ParserResult* result);
 void afficher_instructions(Instruction** instructions, int count);
+
+#endif

@@ -72,7 +72,7 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
 
 int remove_segment(MemoryHandler *handler, const char *name) {
     // Retire l'élément de la table de hachage et vérifie si l'opération a réussi
-    int result = hashmap_remove(handler->allocated, name);
+    int result = HashMap_remove(handler->allocated, name);
     if (result == 0) { // Si la suppression échoue
         printf("Segment non trouvé\n");
         return 0;
@@ -123,4 +123,20 @@ int remove_segment(MemoryHandler *handler, const char *name) {
     }
 
     return 1;
+}
+
+void liberer_segments(Segment* seg){
+
+    if (!seg){
+        fprintf(stderr, "Erreur: SEGMENT NULL\n");
+        return;
+    }
+    
+    Segment* tmp = seg;
+
+    while(tmp){
+        seg = seg->next;
+        free(tmp);
+        tmp = seg;
+    }
 }
