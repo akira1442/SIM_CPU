@@ -74,55 +74,49 @@ Instruction* parse_code_instruction(const char* line, HashMap* labels, int code_
     return res;
 }
 
-ParserResult* parse(const char* filename){
+ParserResult *parse(const char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+        fprintf(stderr, "Erreur lecture fichier\n");
+        return NULL;
+    }
 
-    FILE* f = fopen(filename, "r");
-    char line[255];
-    
-    // boolean 1 si on pour si .DATA 0 si .CODE
-    int DorC = 1;
+    ParserResult *res = (ParserResult *)malloc(sizeof(ParserResult));
+    res->data_instructions = NULL;
+    res->data_count = 0;
+    res->code_instructions = NULL;
+    res->code_count = 0;
+    res->labels = hashmap_create();
+    res->memory_locations = hashmap_create();
 
-    ParserResult* new_parser = (ParserResult*) malloc(sizeof(ParserResult));
-    new_parser->data_count = 0;
-    new_parser->code_count = 0;
-    new_parser->data_instructions = NULL; //(Instruction**) malloc(sizeof(Instruction*));
-    new_parser->code_instructions = NULL; //(Instruction**) malloc(sizeof(Instruction*));
-    new_parser->memory_locations = hashmap_create();
-    new_parser->labels = hashmap_create();
+    char line[256];
+    int in_data = 0, in_code = 0;
 
-    while (fgets(line, 255, f) != NULL){
-        // Supprime le saut de ligne
-        line[strcspn(line, "\n")] = 0;
-
-        // On verifie si on est dans la section .DATA ou .CODE
-        if (strcmp(line, ".CODE") == 0){
-            DorC = 0;
+    while (fgets(line, sizeof(line), f)) {
+        if (strncmp(line, ".DATA", 5) == 0) {
+            in_data = 1;
+            in_code = 0;
             continue;
         }
-        else if (strcmp(line, ".DATA") == 0){
-            DorC = 1;
-            printf("true\n");
+        if (strncmp(line, ".CODE", 5) == 0) {
+            in_data = 0;
+            in_code = 1;
             continue;
         }
-        // On ajoute les instructions dans le tableau d'instructions correspondant
-        
-        Instruction** new_inst = NULL;
-        if (DorC == 1){
-            //printf("line : %s\n", line);
-            new_inst = (Instruction**) realloc(new_parser->data_instructions, (new_parser->data_count+1)*sizeof(Instruction*));
-            new_parser->data_instructions = new_inst;
-            new_parser->data_instructions[new_parser->data_count] = parse_data_instruction(line, new_parser->memory_locations);
-            new_parser->data_count++;              
-        }else if (DorC == 0){      
-            //printf("line : %s\n", line);  
-            new_inst = (Instruction**) realloc(new_parser->code_instructions, (new_parser->code_count+1) * sizeof(Instruction*));
-            new_parser->code_instructions = new_inst;
-            new_parser->code_instructions[new_parser->code_count] = parse_code_instruction(line, new_parser->labels, new_parser->code_count);
-            new_parser->code_count++;
+
+        if (in_data) {
+            res->data_count++;
+            res->data_instructions = (Instruction **)realloc(res->data_instructions, res->data_count * sizeof(Instruction *));
+            res->data_instructions[res->data_count - 1] = parse_data_instruction(line, res->memory_locations);
+        } else if (in_code) {
+            res->code_count++;
+            res->code_instructions = (Instruction **)realloc(res->code_instructions, res->code_count * sizeof(Instruction *));
+            res->code_instructions[res->code_count - 1] = parse_code_instruction(line, res->labels, res->code_count);
         }
     }
+
     fclose(f);
-    return new_parser;
+    return res;
 }
 
 void free_parser_result(ParserResult* result) {

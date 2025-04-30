@@ -117,15 +117,15 @@ void print_data_segment(CPU *cpu) {
     printf("------- | -----\n");
 
     // Parcourt chaque position du segment
-    for (int i = 0; i < ds->size; i++) {
-        int memory_address = ds->start + i;
-        void *data = cpu->memory_handler->memory[memory_address];
-
-        if (data) {
-            // Affiche la valeur pointée par data (cast en int* pour simplifier)
-            printf("%d | %d\n", memory_address, *(int *)data);
-        }
-    }
+    //for (int i = 0; i < ds->size; i++) {
+    //    int memory_address = ds->start + i;
+    //    int *data = cpu->memory_handler->memory[memory_address];
+//
+    //    if (data) {
+    //        // Affiche la valeur pointée par data (cast en int* pour simplifier)
+    //        printf("%d | %d\n", memory_address, *(int *)data);
+    //    }
+    //}
 }
 
 int matches(const char* pattern, const char* str){
@@ -549,8 +549,8 @@ int execute_instruction(CPU *cpu, Instruction *instr) {
     }
 
     // Résoudre les adresses des opérandes
-    void *src = resolve_addressing(cpu, instr->operand1);
-    void *dest = resolve_addressing(cpu, instr->operand2);
+    void *src = resolve_addressing(cpu, instr->operand2);
+    void *dest = resolve_addressing(cpu, instr->operand1);
 
     if (!src || !dest) {
         fprintf(stderr, "ERREUR: Échec de la résolution des adresses des opérandes\n");
@@ -565,11 +565,11 @@ Instruction* fetch_next_instruction(CPU* cpu) {
     
     if (!cpu) return NULL;
 
-    int* ip = hashmap_get(cpu->context, "IP");
+    int* ip = HashMap_get(cpu->context, "IP");
     
     if (!ip || *ip == -1) return NULL;
 
-    Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
+    Segment* cs = HashMap_get(cpu->memory_handler->allocated, "CS");
     if (!cs || *ip >= cs->size) return NULL;
 
     Instruction* instr = load(cpu->memory_handler, "CS", *ip);
@@ -600,46 +600,36 @@ void print_cpu_state(CPU *cpu) {
 
 
 
-int run_program(CPU *cpu) {
+int run_program(CPU* cpu) {
     
-    if (!cpu) {
-        fprintf(stderr, "ERREUR: CPU est NULL\n");
-        return 0;
-    }
+    if (!cpu) return 0;
 
-    printf("Début de l'exécution du programme.\n");
+    int* ip = HashMap_get(cpu->context, "IP");
     print_cpu_state(cpu);
 
-    char input[10];
     while (1) {
-        printf("\nAppuyez sur Entrée pour exécuter l'instruction suivante, ou 'q' pour quitter : ");
-        scanf("%9s", input);
-
-        if (strcmp(input, "q") == 0) {
-            printf("Programme interrompu par l'utilisateur.\n");
-            break;
-        }
-
-        Instruction *instr = fetch_next_instruction(cpu);
+        Instruction* instr = fetch_next_instruction(cpu);
         if (!instr) {
-            printf("Fin du programme.\n");
+            fprintf(stderr, "instruction invalide. arrêt.\n");
             break;
         }
 
-        printf("Exécution de l'instruction : %s %s %s\n", 
-               instr->mnemonic ? instr->mnemonic : "",
-               instr->operand1 ? instr->operand1 : "",
-               instr->operand2 ? instr->operand2 : "");
+        printf("IP:%d | %s %s %s\n", *ip, instr->mnemonic, instr->operand1 ? instr->operand1 : "", instr->operand2 ? instr->operand2 : "");
 
-        // Résoudre les adresses des opérandes et exécuter l'instruction
-        int result = execute_instruction(cpu, instr);
-        if (result != 0) {
-            fprintf(stderr, "ERREUR: Échec de l'exécution de l'instruction\n");
+        if (!execute_instruction(cpu, instr)) {
+            printf("erreur d'exécution !\n");
+            break;
+        }
+
+        if (strcmp(instr->mnemonic, "HALT") == 0) {
+            printf("→ halt rencontré, arrêt du programme.\n");
             break;
         }
 
         print_cpu_state(cpu);
     }
 
-    return 0;
+    printf("\n=== final cpu state ===\n");
+    print_cpu_state(cpu);
+    return 1;
 }
