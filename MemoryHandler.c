@@ -38,10 +38,11 @@ int create_segment(MemoryHandler *handler, const char *name, int start, int size
         new_seg->size = size;
         new_seg->start = start;
         new_seg->next = NULL;
+        //printf("%d, %d | %d %d\n", seg_free->size, seg_free->start, new_seg->size, new_seg->start);
 
         // On doit rechaÃ®nÃ© les espaces libre entre eux, on a 4 cas diffÃ©rents
         // Cas oÃ¹ l'adresse est plus grande que l'adresse du segment libre
-        if ((start > seg_free->start) && (start+size == seg_free->next->start)){
+        if ((start > seg_free->start) && (start+size <= seg_free->next->start)){
             seg_free->size -= new_seg->size;
         }
         // Cas oÃ¹ l'espace disponible est plus grand que l'espace demandÃ©

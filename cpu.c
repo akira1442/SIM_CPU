@@ -70,87 +70,60 @@ void cpu_destroy(CPU* cpu) {
 
 void* store(MemoryHandler* handler , const char* segment_name, int pos, void* data){
 
-    int clef = simple_hash(segment_name);
-    Segment* seg = handler->allocated->table[clef].value;
-    
-    if (seg == NULL) {
+    Segment* seg = HashMap_get(handler->allocated, segment_name);
+
+    if (!seg){
         fprintf(stderr, "ERREUR: segment %s non trouve\n", segment_name);
         return NULL;
     }
-
-    if (pos >= seg->size) {
-        fprintf(stderr, "ERREUR: position %d hors limites pour le segment %s\n", pos, segment_name);
-        return NULL;
-    }
-
-    // On stocke la valeur dans la memoire
-
     handler->memory[seg->start + pos] = data;
-
     return data;
 }
 
 void* load(MemoryHandler* handler, const char* segment_name, int pos){
 
-    // On recherche le segent dans la table de hachage
-    Segment* DS = HashMap_get(handler->allocated, segment_name);
-    
-    if (DS == NULL) {
-        fprintf(stderr, "ERREUR: segment %s non trouve\n", segment_name);
+    Segment* seg = HashMap_get(handler->allocated, segment_name);
+
+    if (!seg || pos >= seg->size){
         return NULL;
     }
-
-    if (pos >= DS->size) {
-        fprintf(stderr, "ERREUR: position %d hors limites pour le segment %s\n", pos, segment_name);
-        return NULL;
-    }
-
-    // Renvoie la valeur stockee dans la memoire
-    return handler->memory[DS->start + pos];
+    return handler->memory[seg->start];
 }
 
 void allocate_variables(CPU* cpu, Instruction** data_instructions, int data_count){
 
     if (!cpu || !cpu->memory_handler || !data_instructions) {
-        fprintf(stderr, "ERREUR: CPU ou instructions de données NULL\n");
+        fprintf(stderr, "ERREUR: cpu ou instructions de données NULL\n");
         return;
     }
 
-    for (int i = 0; i < data_count; i++) {
-        Instruction* inst = data_instructions[i];
-        if (inst && inst->mnemonic && inst->operand1 && inst->operand2) {
-            // On alloue de la mémoire pour le segment de données
-            int size = atoi(inst->operand1);
-            int start = cpu->memory_handler->total_size; // Adresse de début du segment
-            create_segment(cpu->memory_handler, inst->mnemonic, start, size);
-            cpu->memory_handler->total_size += size; // Met à jour la taille totale de la mémoire
-        }
+    create_segment(cpu->memory_handler, "DS", 0, data_count);
+
+    for(int i = 0; i < data_count; i++){
+        store(cpu->memory_handler, "DS", i, data_instructions[i]->operand2);
     }
 }
 
 void print_data_segment(CPU *cpu) {
-    // Vérifie si le segment "DS" existe
-    Segment *ds_segment = (Segment *)HashMap_get(cpu->memory_handler->allocated, "DS");
-    if (!ds_segment) {
+    
+    Segment *ds = (Segment *)HashMap_get(cpu->memory_handler->allocated, "DS");
+    if (!ds) {
         printf("Segment de données 'DS' non trouvé.\n");
         return;
     }
 
-    printf("Contenu du segment de données 'DS' (Adresse de début : %d, Taille : %d)\n", 
-           ds_segment->start, ds_segment->size);
+    printf("Contenu du segment de données 'DS' (Adresse de début : %d, Taille : %d)\n", ds->start, ds->size);
     printf("Adresse | Valeur\n");
     printf("------- | -----\n");
 
     // Parcourt chaque position du segment
-    for (int i = 0; i < ds_segment->size; i++) {
-        int memory_address = ds_segment->start + i;
+    for (int i = 0; i < ds->size; i++) {
+        int memory_address = ds->start + i;
         void *data = cpu->memory_handler->memory[memory_address];
 
         if (data) {
             // Affiche la valeur pointée par data (cast en int* pour simplifier)
-            printf("%-7d | %d\n", memory_address, *(int *)data);
-        } else {
-            printf("%-7d | NULL\n", memory_address);
+            printf("%d | %d\n", memory_address, *(int *)data);
         }
     }
 }
@@ -320,6 +293,8 @@ CPU* setup_cpu_environment() {
     return cpu;
 }
 
+//EXERCICE 6 
+
 char *trim(char *str) {
     while (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r') str++;
     char *end = str + strlen(str) - 1;
@@ -417,8 +392,6 @@ void* resolve_addressing(CPU *cpu, const char *operand) {
     fprintf(stderr, "ERREUR: Mode d'adressage non reconnu pour l'opérande '%s'\n", operand);
     return NULL;
 }
-
-//EXERCICE 6 
 
 
 int resolve_constants(ParserResult *result) {
@@ -588,39 +561,20 @@ int execute_instruction(CPU *cpu, Instruction *instr) {
     return handle_instruction(cpu, instr, src, dest);
 }
 
-Instruction* fetch_next_instruction(CPU *cpu) {
-    if (!cpu || !cpu->memory_handler) {
-        fprintf(stderr, "ERREUR: CPU ou memory_handler est NULL\n");
-        return NULL;
-    }
+Instruction* fetch_next_instruction(CPU* cpu) {
+    
+    if (!cpu) return NULL;
 
-    // Récupérer le registre IP
-    int *ip = (int *)HashMap_get(cpu->context, "IP");
-    if (!ip) {
-        fprintf(stderr, "ERREUR: Registre IP non trouvé\n");
-        return NULL;
-    }
+    int* ip = hashmap_get(cpu->context, "IP");
+    
+    if (!ip || *ip == -1) return NULL;
 
-    // Vérifier si IP est dans les limites valides
-    if (*ip < 0 || *ip >= cpu->memory_handler->total_size) {
-        fprintf(stderr, "ERREUR: IP hors limites de la mémoire\n");
-        return NULL;
-    }
+    Segment* cs = hashmap_get(cpu->memory_handler->allocated, "CS");
+    if (!cs || *ip >= cs->size) return NULL;
 
-    // Récupérer l'instruction depuis le segment CS
-    void *instruction_data = load(cpu->memory_handler, "CS", *ip);
-    if (!instruction_data) {
-        fprintf(stderr, "ERREUR: Échec du chargement de l'instruction\n");
-        return NULL;
-    }
-
-    // Convertir les données de l'instruction en un pointeur Instruction
-    Instruction *instruction = *(Instruction **)instruction_data;
-
-    // Incrementer IP pour pointer sur l'instruction suivante
+    Instruction* instr = load(cpu->memory_handler, "CS", *ip);
     (*ip)++;
-
-    return instruction;
+    return instr;
 }
 
 //CETTE FONCTION N'EST PAS DEMANDÉ D'ORIGINE
@@ -647,9 +601,10 @@ void print_cpu_state(CPU *cpu) {
 
 
 int run_program(CPU *cpu) {
+    
     if (!cpu) {
         fprintf(stderr, "ERREUR: CPU est NULL\n");
-        return -1;
+        return 0;
     }
 
     printf("Début de l'exécution du programme.\n");

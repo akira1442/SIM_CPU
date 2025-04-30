@@ -101,7 +101,7 @@ ParserResult* parse(const char* filename){
         }
         else if (strcmp(line, ".DATA") == 0){
             DorC = 1;
-            printf("caca\n");
+            printf("true\n");
             continue;
         }
         // On ajoute les instructions dans le tableau d'instructions correspondant

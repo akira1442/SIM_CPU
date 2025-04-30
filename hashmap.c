@@ -35,17 +35,24 @@ int HashMap_insert(HashMap* map, const char* key, void* value){
 	return 0;
 }
 
-void* HashMap_get(HashMap* map, const char* key){
-	
-	if (!map) return NULL;
+void* HashMap_get(HashMap* map, const char* key) {
 
-	for (int i =0; i < map->size; i++){
-		if (strcmp(map->table[simple_hash(key)+i].key, key)){
-			return map->table[simple_hash(key)+i].value ;
+	if (!map || !key) return NULL;
+	
+		int indice = (int)simple_hash(key) % TABLE_SIZE;
+	
+		for (int i = 0; i < TABLE_SIZE; i++) {
+			int idx = (indice + i) % TABLE_SIZE;
+			if (map->table[idx].key == NULL) {
+				// Si on trouve une case vide, la clé n'existe pas
+				return NULL;
+			}
+			if (strcmp(map->table[idx].key, key) == 0) {
+				return map->table[idx].value;
+			}
 		}
+		return NULL;
 	}
-	return NULL ;
-}
 
 int HashMap_remove(HashMap* map, const char* key){
 	
